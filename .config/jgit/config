@@ -1,0 +1,3 @@
+[filesystem "Amazon.com Inc.|17.0.10|/dev/root"]
+	timestampResolution = 23767 nanoseconds
+	minRacyThreshold = 6865 microseconds

@@ -105,3 +105,59 @@ java –jar jenkins.war --httpPort=8080
 ls
 clear
 java -jar jenkins.war --httpPort=8080
+docker ps -a
+clear
+pwd
+ls
+git init
+ll --group-directories-first .git
+ls
+ls -a
+clear
+git status
+clear
+git add .
+git status
+clear
+ls
+clear
+ls
+sed -i --follow-symlinks 's/<title>방명록 (K8S)<\/title>/<title>GUESTBOOK<\/title>/g' src/main/resources/templates/index.html
+git status
+git add src/main/resources/templates/index.html
+clear
+git status
+clear
+git status src/main/resources/templates/index.html
+git rm --cached src/main/resources/templates/index.html 
+git status src/main/resources/templates/index.html 
+git add src/main/resources/templates/index.html 
+git status src/main/resources/templates/index.html 
+clear
+git commit -m "[INITIAL] 프로젝트 최초 등록"
+git config --global user.name 'devops'
+git config --global user.email 'javaexpert@nate.com'
+git config --global credential.helper cache
+cat ~/.gitconfig
+clear
+git status
+git add .
+git status
+git commit --amend
+clear
+git commit -m "[INITIAL] 프로젝트 최초 등록"
+git status
+git log
+git commit --amend
+clear
+git log
+git log src/main/resources/templates/index.html
+git commit --amend
+clear
+git log
+vi ~/.bashrc
+logout
+cd jenkins
+clear
+ls
+java -jar jenkins.war --httpPort=8080

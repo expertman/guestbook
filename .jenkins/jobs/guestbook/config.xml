@@ -14,22 +14,32 @@
   <properties/>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3880.vb_ef4b_5cfd270">
     <script>pipeline {
-    agent any 
+    agent any
     stages {
-        stage(&apos;sh 플러그인 실습&apos;) { 
+        stage(&apos;Checkout&apos;) {
             steps {
-                sh &apos;&apos;&apos;
-                    id
-                    echo $$
-                    pwd
-                    cat /proc/$(echo $$)/cmdline
-                    env | sort
-					sleep 300
-                &apos;&apos;&apos;
+                git branch: &apos;main&apos;, url:&apos;https://github.com/expertman/guestbook.git&apos;
+            }
+        }
+        stage(&apos;Build&apos;) {
+            steps {
+                sh &apos;./mvnw clean compile&apos;
+            }
+        }
+        stage(&apos;Unit Test&apos;) {
+            steps {
+                sh &apos;./mvnw test&apos;
+            }
+            
+            post {
+                always {
+                    junit &apos;**/target/surefire-reports/TEST-*.xml&apos;
+                }
             }
         }
     }
-}</script>
+}
+</script>
     <sandbox>true</sandbox>
   </definition>
   <triggers/>
