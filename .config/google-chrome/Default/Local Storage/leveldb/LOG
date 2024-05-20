@@ -1,2 +1,9 @@
-2024/05/13-01:23:04.454 4 Creating DB /home/ubuntu/.config/google-chrome/Default/Local Storage/leveldb since it was missing.
-2024/05/13-01:23:04.485 4 Reusing MANIFEST /home/ubuntu/.config/google-chrome/Default/Local Storage/leveldb/MANIFEST-000001
+2024/05/14-01:32:09.367 4 Reusing MANIFEST /home/ubuntu/.config/google-chrome/Default/Local Storage/leveldb/MANIFEST-000001
+2024/05/14-01:32:09.379 4 Recovering log #3
+2024/05/14-01:32:09.379 4 Reusing old log /home/ubuntu/.config/google-chrome/Default/Local Storage/leveldb/000003.log 
+2024/05/14-01:35:13.988 6 Level-0 table #5: started
+2024/05/14-01:35:13.996 6 Level-0 table #5: 182911 bytes OK
+2024/05/14-01:35:13.999 6 Delete type=0 #3
+2024/05/14-01:53:20.357 6 Level-0 table #7: started
+2024/05/14-01:53:20.366 6 Level-0 table #7: 182837 bytes OK
+2024/05/14-01:53:20.371 6 Delete type=0 #4

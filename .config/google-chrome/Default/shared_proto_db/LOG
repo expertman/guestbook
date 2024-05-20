@@ -1,2 +1,3 @@
-2024/05/13-01:23:04.959 255b Creating DB /home/ubuntu/.config/google-chrome/Default/shared_proto_db since it was missing.
-2024/05/13-01:23:04.975 255b Reusing MANIFEST /home/ubuntu/.config/google-chrome/Default/shared_proto_db/MANIFEST-000001
+2024/05/14-01:32:10.067 81a5 Reusing MANIFEST /home/ubuntu/.config/google-chrome/Default/shared_proto_db/MANIFEST-000001
+2024/05/14-01:32:10.067 81a5 Recovering log #3
+2024/05/14-01:32:10.070 81a5 Reusing old log /home/ubuntu/.config/google-chrome/Default/shared_proto_db/000003.log 

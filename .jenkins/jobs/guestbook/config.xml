@@ -11,18 +11,147 @@
   </actions>
   <description></description>
   <keepDependencies>false</keepDependencies>
-  <properties/>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.38.0">
+      <projectUrl>https://github.com/expertman/guestbook/</projectUrl>
+      <displayName></displayName>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.38.0">
+          <spec></spec>
+        </com.cloudbees.jenkins.GitHubPushTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3894.3896.vca_2c931e7935">
-    <script>pipeline {
+    <script>import java.text.SimpleDateFormat
+
+def TODAY = (new SimpleDateFormat(&quot;yyyyMMddHHmmss&quot;)).format(new Date())
+
+pipeline {
     agent any
+    environment {
+        strDockerTag = &quot;${TODAY}_${BUILD_ID}&quot;
+        strDockerImage =&quot;devtrainer/cicd_guestbook:${strDockerTag}&quot;
+    }
 
     stages {
-        stage(&apos;Hello&apos;) {
+        stage(&apos;Checkout&apos;) {
             steps {
-                echo &apos;Hello World&apos;
+                git branch: &apos;main&apos;, url:&apos;https://github.com/expertman/guestbook.git&apos;
             }
         }
+        stage(&apos;Build&apos;) {
+            steps {
+                sh &apos;./mvnw clean package&apos;
+            }
+        }
+        stage(&apos;Unit Test&apos;) {
+            steps {
+                sh &apos;./mvnw test&apos;
+            }
+            
+            post {
+                always {
+                    junit &apos;**/target/surefire-reports/TEST-*.xml&apos;
+                }
+            }
+        }
+
+        stage(&apos;SonarQube Analysis&apos;) {
+            steps{
+                echo &apos;SonarQube Analysis&apos;
+                /*
+                withSonarQubeEnv(&apos;SonarQube-Server&apos;){
+                    sh &apos;&apos;&apos;
+                        ./mvnw sonar:sonar \
+                        -Dsonar.projectKey=guestbook \
+                        -Dsonar.host.url=http://43.201.49.180:9000 \
+                        -Dsonar.login=d7c0156ac596ee750c5583b68e6b051e87d61eb1
+                    &apos;&apos;&apos;
+                }
+                */
+            }
+        }
+        stage(&apos;SonarQube Quality Gate&apos;){
+            steps{
+                echo &apos;SonarQube Quality Gate&apos;
+                /*
+                timeout(time: 1, unit: &apos;MINUTES&apos;) {
+                    script{
+                        def qg = waitForQualityGate()
+                        if(qg.status != &apos;OK&apos;) {
+                            echo &quot;NOT OK Status: ${qg.status}&quot;
+                            error &quot;Pipeline aborted due to quality gate failure: ${qg.status}&quot;
+                        } else{
+                            echo &quot;OK Status: ${qg.status}&quot;
+                        }
+                    }
+                }
+                */
+            }
+        }
+        stage(&apos;Docker Image Build&apos;) {
+            steps {
+                script {
+                    //oDockImage = docker.build(strDockerImage)
+                    oDockImage = docker.build(strDockerImage, &quot;--build-arg VERSION=${strDockerTag} -f Dockerfile .&quot;)
+                }
+            }
+        }
+        stage(&apos;Docker Image Push&apos;) {
+            steps {
+                script {
+                    docker.withRegistry(&apos;&apos;, &apos;DockerHub_Credential&apos;) {
+                        oDockImage.push()
+                    }
+                }
+            }
+        }
+        stage(&apos;Staging Deploy&apos;) {
+            steps {
+                sshagent(credentials: [&apos;Staging-PrivateKey&apos;]) {
+                    sh &quot;ssh -o StrictHostKeyChecking=no ubuntu@172.31.0.110 docker container rm -f guestbookapp&quot;
+                    sh &quot;ssh -o StrictHostKeyChecking=no ubuntu@172.31.0.110 docker container run \
+                                        -d \
+                                        -p 38080:80 \
+                                        --name=guestbookapp \
+                                        -e MYSQL_IP=172.31.0.100 \
+                                        -e MYSQL_PORT=3306 \
+                                        -e MYSQL_DATABASE=guestbook \
+                                        -e MYSQL_USER=root \
+                                        -e MYSQL_PASSWORD=education \
+                                        ${strDockerImage} &quot;
+                }
+            }
+        }
+        stage (&apos;JMeter LoadTest&apos;) {
+            steps { 
+                sh &apos;~/jmeter/jmeter/bin/jmeter.sh -j jmeter.save.saveservice.output_format=xml -n -t ~/src/main/jmx/guestbook_loadtest.jmx -l loadtest_result.jtl&apos; 
+                perfReport filterRegex: &apos;&apos;, showTrendGraphs: true, sourceDataFiles: &apos;loadtest_result.jtl&apos; 
+            } 
+        }
     }
+    post { 
+        always { 
+            emailext (attachLog: true, body: &apos;본문&apos;, compressLog: true
+                    , recipientProviders: [buildUser()], subject: &apos;제목&apos;, to: &apos;jongsoon.bok@gmail.com&apos;)
+
+        }
+        success { 
+            slackSend(tokenCredentialId: &apos;slack-token&apos;
+                , channel: &apos;#방명록-프로젝트&apos;
+                , color: &apos;good&apos;
+                , message: &quot;${JOB_NAME} (${BUILD_NUMBER}) 빌드가 성공적으로 끝났습니다. Details: (&lt;${BUILD_URL} | here &gt;)&quot;)
+        }
+        failure { 
+            slackSend(tokenCredentialId: &apos;slack-token&apos;
+                , channel: &apos;#방명록-프로젝트&apos;
+                , color: &apos;danger&apos;
+                , message: &quot;${JOB_NAME} (${BUILD_NUMBER}) 빌드가 실패하였습니다. Details: (&lt;${BUILD_URL} | here &gt;)&quot;)
+    }
+  }
 }
 </script>
     <sandbox>true</sandbox>
